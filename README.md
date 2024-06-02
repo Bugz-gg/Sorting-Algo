@@ -37,7 +37,6 @@ I plan to implement at least 10 sorting algorithms. Feel free to extend the proj
 
 ## Features
 
-- **Step-by-Step Execution**: Each step of the sorting process is controlled, allowing you to see the algorithm in action.
 - **Speed Control**: A speed slider enables you to adjust the execution speed to your preference.
 - **Comparison Count**: The number of comparisons made by the algorithm is displayed.
 - **Algorithm Complexity**: The time complexity of each algorithm is provided.
