@@ -1,0 +1,77 @@
+name: Windows Release
+
+on:
+  push:
+    branches:
+      - 'main'
+      - 'continuous-integration'
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+    - 'main'
+    - 'continuous-integration'
+
+defaults:
+  run:
+    shell: cmd
+
+env:
+  SOURCE_DIR:   ${{ github.workspace }}
+  QT_VERSION:   6.4.3
+  ARTIFACT:     qt-Algo_Sort.zip
+
+jobs:
+  build:
+    runs-on:  windows-2019
+
+    steps:
+      - name: (1) Checkout repo
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: (2) Get all tags for correct version determination
+        working-directory:  ${{ github.workspace }}
+        run: |
+          git fetch --all --tags -f
+      - name: (3) Install Qt
+        uses: jurplel/install-qt-action@v2
+        with:
+          version:      ${{ env.QT_VERSION }}
+          host:         windows
+          target:       desktop
+          arch:         win64_msvc2019_64
+          dir:          ${{ runner.temp }}
+          modules:      qtcharts qt3d
+          setup-python: false
+              
+      - name: (6) Create build directory
+        run:  mkdir ${{ runner.temp }}\build
+
+      - name: (7) Set up Visual Studio shell
+        uses: egor-tensin/vs-shell@v2
+        with:
+          arch: x64
+
+      - name: (8) Build
+        working-directory: ${{ runner.temp }}\build
+        run:  |
+              qmake -r ${{ env.SOURCE_DIR }}\app\Algo_Sort.pro
+              cd release
+              windeployqt --qmldir ${{ env.SOURCE_DIR }} Algo_Sort.exe --pdb --release --compiler-runtime
+              copy C:\Windows\System32\concrt140.dll . 
+              copy C:\Windows\System32\vccorlib140.dll .
+              copy C:\Windows\System32\msvcp140.dll .
+              copy C:\Windows\System32\vcruntime140.dll .
+              
+      - name: (9) Zip build
+        working-directory: ${{ runner.temp }}
+        run:  |
+              7z a qt-Algo_Sort.zip ${{ runner.temp }}\build\* -r
+              
+      - name: (10) Save build artifact
+        uses: actions/upload-artifact@main
+        with:
+          name: ${{ env.ARTIFACT }}
+          path: ${{ runner.temp }}\${{ env.ARTIFACT }}
