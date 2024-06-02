@@ -1,5 +1,3 @@
-Here's an enhanced version of your README file for the Sorting-Algo project:
-
 # Sorting-Algo
 
 This project is developed using Qt and C++. It serves as a small application to visualize and understand different sorting algorithms.
