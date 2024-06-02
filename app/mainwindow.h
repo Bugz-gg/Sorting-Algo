@@ -39,8 +39,6 @@ private slots:
 
     void on_horizontalSlider_valueChanged(int value);
 
-    void on_exitBtn_clicked();
-
     void on_algoTxt_currentIndexChanged(int index);
 
     void on_algoTxt_activated(int index);

@@ -233,13 +233,6 @@ void MainWindow::on_horizontalSlider_valueChanged(int value)
 }
 
 
-void MainWindow::on_exitBtn_clicked()
-{
-    pid_t mypid = getpid();
-    //kill(mypid, 9); // Only on linux maybe because I didnt test it on Mac.
-}
-
-
 void MainWindow::on_algoTxt_currentIndexChanged(int index)
 {
     switch (index){
