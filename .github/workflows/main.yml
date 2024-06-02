@@ -58,8 +58,9 @@ jobs:
         working-directory: ${{ runner.temp }}\build
         run:  |
               qmake -r ${{ env.SOURCE_DIR }}\app\
+              nmake
               cd release
-              windeployqt --qmldir ${{ env.SOURCE_DIR }}\app\Algo_Sort.exe --pdb --release --compiler-runtime
+              windeployqt --qmldir ${{ env.SOURCE_DIR }}\app\ Algo_Sort.exe --pdb --release --compiler-runtime
               
       - name: (9) Zip build
         working-directory: ${{ runner.temp }}
