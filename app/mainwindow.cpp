@@ -8,7 +8,6 @@
 #include <signal.h>
 #include <iostream>
 
-
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
@@ -16,6 +15,7 @@ MainWindow::MainWindow(QWidget *parent) :
     i(0),
     j(0),
     speed_ms(0),
+    sound(1),
     sorted(false)
 {
     ui->setupUi(this);
@@ -42,7 +42,7 @@ void MainWindow::on_startBtn_clicked()
         }
         timer = new QTimer(this);
         connect(timer, &QTimer::timeout, this, &MainWindow::sortStep);
-        timer->start(15 * speed_ms);
+        timer->start(speed_ms);
     }
     else {
         if (timer->isActive()) {
@@ -76,10 +76,14 @@ void MainWindow::initializeScene()
 
     int maxVal = *max_element(array.begin(), array.end());
     int barWidth = ui->graphicsView->width() / array.size();
+    QBrush brush(Qt::blue); // Fill color
+    QPen pen(Qt::black);
 
     for (int i = 0; i < array.size(); ++i) {
-        int barHeight = (array[i] * ui->graphicsView->height()) / maxVal;
+        int barHeight = (array[i] * (ui->graphicsView->height()* 0.9)) / maxVal;
         QGraphicsRectItem* bar = scene->addRect(i * barWidth, ui->graphicsView->height() - barHeight, barWidth, barHeight);
+        bar->setPen(pen);
+        bar->setBrush(brush);
         bars.append(bar);
     }
 }
@@ -91,7 +95,7 @@ void MainWindow::updateBars()
     QBrush brush(Qt::blue); // Fill color
     QPen pen(Qt::black);    // Border color
     for (int i = 0; i < array.size(); ++i) {
-        int barHeight = (array[i] * ui->graphicsView->height()) / maxVal;
+        int barHeight = (array[i] * (ui->graphicsView->height()* 0.9)) / maxVal;
         bars[i]->setRect(i * barWidth, ui->graphicsView->height() - barHeight, barWidth, barHeight);
         bars[i]->setBrush(brush);
         bars[i]->setPen(pen);
@@ -120,19 +124,31 @@ void MainWindow::sortStep()
     case GnomeSort:
         return gnomeSort();
         break;
+    case QuickSort:
+        if (stack.empty() && !i)  {
+            stack.push({0, array.size() - 1});
+            ++i;
+        }
+        return quickSort();
+        break;
     default:
         break;
     }
 }
+#include <QtConcurrent/QtConcurrent>
+
+void MainWindow::qswap(QVector<int> *array, int i, int j) {
+    QtConcurrent::run([this]() {
+        Beep(sound, speed_ms);
+    });
+    qSwap((*array)[i], (*array)[j]);
+}
 
 void MainWindow::bubbleSort(){
-    QBrush brush(Qt::red);
     if (i < array.size() - 1) {
         if (j < array.size() - i - 1) {
-            //bars[j]->setBrush(brush);
-            //bars[j + 1]->setBrush(brush);
             if (array[j] > array[j + 1]) {
-                qSwap(array[j], array[j + 1]); // maybe add color to the swap
+                qswap(&array, j, j+1); // maybe add color to the swap
                 updateBars();
             }
             ++j;
@@ -152,6 +168,9 @@ void MainWindow::bogoSort(){
         random_device rd;
         mt19937 g(rd());
         shuffle(array.begin(), array.end(), g);
+        QtConcurrent::run([this]() {
+            Beep(sound, speed_ms);
+        });
         updateBars();
         bool s = true;
         for (int i = 0; i < array.size() - 1; ++i){
@@ -168,6 +187,45 @@ void MainWindow::bogoSort(){
     }
 }
 
+
+
+void MainWindow::quickSort() {
+    if (!stack.empty()) {
+        auto [low, high] = stack.pop();
+        int pivotIndex = partition(low, high);
+
+        if (pivotIndex - 1 > low) {
+            stack.push({low, pivotIndex - 1});
+        }
+        if (pivotIndex + 1 < high) {
+            stack.push({pivotIndex + 1, high});
+        }
+
+        updateBars();
+    } else {
+        sorted = true;
+    }
+}
+
+int MainWindow::partition(int low, int high) {
+    int pivot = array[high];
+    int i = low - 1;
+
+    for (int j = low; j < high; ++j) {
+        if (array[j] < pivot) {
+            ++i;
+            qswap(&array, i, j);
+            updateBars();
+            incrementComp();
+        }
+    }
+    qswap(&array, i + 1, high);
+    updateBars();
+    incrementComp();
+    return i + 1;
+}
+
+
 void MainWindow::gnomeSort(){
     if (i < array.size()) {
         if (array[i] >= array[i - 1]){
@@ -175,7 +233,7 @@ void MainWindow::gnomeSort(){
             ++i;
         }
         else {
-            qSwap(array[i], array[i - 1]);
+            qswap(&array, i, i- 1);
             updateBars();
             incrementComp();
             if (i > 1) --i;
@@ -198,6 +256,9 @@ void MainWindow::on_resetBtn_clicked()
         timer = nullptr;
     }
     array.clear();
+    while (!stack.empty()) {
+        stack.pop();
+    }
     bars.clear();
     scene->clear();
     ui->lcdNumber->display(0);
@@ -235,27 +296,30 @@ void MainWindow::on_horizontalSlider_valueChanged(int value)
 
 void MainWindow::on_algoTxt_currentIndexChanged(int index)
 {
-    switch (index){
-    case Bogosort:
-        ui->complexity->setText("<p align='center'><b><span style='font-family: Arial; font-size: 30pt;'>Infinity</span></b></p>");
-        break;
-    case BubbleSort:
-        ui->complexity->setText("<p align='center'><b><span style='font-family: Arial; font-size: 30pt;'>O(n²)</span></b></p>");
-    case GnomeSort:
-        i = 1;
-        ui->complexity->setText("<p align='center'><b><span style='font-family: Arial; font-size: 30pt;'>O(n²)</span></b></p>");
-    }}
-
+    return on_algoTxt_activated(index);
+}
 void MainWindow::on_algoTxt_activated(int index)
 {
     switch (index){
     case Bogosort:
-        ui->complexity->setText("<p align='center'><b><span style='font-family: Arial; font-size: 30pt;'>Infinity</span></b></p>");
+        ui->complexity->setText("<p align='center'><b><span style='font-family: Arial; font-size: 30pt;'>O((n+1)!)</span></b></p>");
         break;
     case BubbleSort:
         ui->complexity->setText("<p align='center'><b><span style='font-family: Arial; font-size: 30pt;'>O(n²)</span></b></p>");
+        break;
     case GnomeSort:
         ui->complexity->setText("<p align='center'><b><span style='font-family: Arial; font-size: 30pt;'>O(n²)</span></b></p>");
+        break;
+    case QuickSort:
+        ui->complexity->setText("<p align='center'><b><span style='font-family: Arial; font-size: 30pt;'>O(n log n)</span></b></p>");
+        break;
     }
+
+}
+
+
+void MainWindow::on_horizontalSlider_2_sliderMoved(int position)
+{
+    sound = position;
 }
 

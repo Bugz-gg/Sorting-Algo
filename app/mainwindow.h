@@ -8,6 +8,8 @@
 #include <QGraphicsScene>
 #include <QTimer>
 #include <QVector>
+#include <windows.h>
+#include <QStack>
 using namespace std;
 
 
@@ -43,6 +45,9 @@ private slots:
 
     void on_algoTxt_activated(int index);
 
+
+    void on_horizontalSlider_2_sliderMoved(int position);
+
 private:
     Ui::MainWindow *ui;
     QGraphicsView *graphicsView;
@@ -50,11 +55,12 @@ private:
     QTimer *timer;
 
     QVector<int> array;
-    QVector<int> cpyarray;
     QVector<QGraphicsRectItem*> bars;
-    int i, j, speed_ms;
+    int i, j, speed_ms, sound;
     bool sorted;
+    QStack<QPair<int, int>> stack;
 
+    void qswap(QVector<int> *, int, int);
     void initializeArray(int);
     void initializeScene();
     void updateBars();
@@ -62,12 +68,15 @@ private:
     void bubbleSort();
     void bogoSort();
     void gnomeSort();
+    void quickSort();
+    int partition(int, int);
 };
 
 enum Algo {
     Bogosort,
     BubbleSort,
     GnomeSort,
+    QuickSort
 };
 
 #endif // MAINWINDOW_H
