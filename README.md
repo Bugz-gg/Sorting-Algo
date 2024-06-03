@@ -32,21 +32,18 @@ The following sorting algorithms are currently implemented:
 - Bubble Sort
 - BogoSort
 - GnomeSort
+- QuickSort
 
-I plan to implement at least 10 sorting algorithms. Feel free to extend the project with additional algorithms as per your convenience.
+I plan to implement at least 10 sorting algorithms (update I will only implement those cause I have other projects ongoing). Feel free to extend the project with additional algorithms as per your convenience.
 
 ## Features
 
 - **Speed Control**: A speed slider enables you to adjust the execution speed to your preference.
 - **Comparison Count**: The number of comparisons made by the algorithm is displayed.
 - **Algorithm Complexity**: The time complexity of each algorithm is provided.
-
-## Incoming Features
-
-- **Sound Effects**: Sound will be played for each comparison, enhancing the visualization experience.
+- **Sound Effects**: Sound is be played for each comparison, enhancing the visualization experience.
 
 ## Contributing
-
 Contributions are welcome ! You can fork it and extend it as you want and feel free to ask question.
 
 ## License
